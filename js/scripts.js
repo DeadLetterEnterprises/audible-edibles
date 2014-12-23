@@ -1,19 +1,12 @@
-var index = 0;
-var stepArray = new Array; 
-var recognition = new webkitSpeechRecognition();
-
 $(document).ready(function(){
 
-	$('#search').keypress(function (e) {
+	$('#search').keypress(function(e) {
 		if (e.which == 13) {
-			var terms = $('#search').val();
+			var terms = encodeURIComponent($('#search').val());
       search(terms);
 			return false;
 		}
 	});
- 
-recognition.continuous = true;
-recognition.onresult = listenForCommand;
 
 });
 
@@ -32,18 +25,19 @@ function search(terms){
       rpp: 50
     },
     success: function(data){
+      console.log(data);
       $.each(data.Results,function(){
         $('#results').append('' + 
-        '<div class="result">' + 
-          '<h2>' + this.Title + '</h2>' +
-          '<p>' +
-            '<img src="'+this.ImageURL+'" />' +
-          '</p>' +
-          '<p>' +
-            '<a class="btn btn-lg btn-success" href="#" data-id="'+this.RecipeID+'">Start cooking &raquo;</a>' +
-          '</p>' +
-          '</div>' +
-        '');
+        '<p class="result">' + 
+          '<a href="#" data-id="'+this.RecipeID+'">' +
+            '<span class="img-wrap"><img src="'+this.ImageURL+'" /></span> ' +
+            '<span class="title">' + 
+              this.Title + 
+              '<span class="glyphicon glyphicon-play"></span>' +
+            '</span>' +
+          '</a>' +
+        '</p>' +
+      '');
       });
       $('#results a').on('click',function(e){
         e.preventDefault();
@@ -57,27 +51,74 @@ function search(terms){
             api_key: 'dvxj3618B6VhQ8psqFCN3VHqvVX57cRt'
           },
           success: function(data){
+            console.log(data);
             var instructions;
             if ( data.Instructions.indexOf('. ') === -1 ){
               instructions = data.Instructions.split(', ');
             } else {
               instructions = data.Instructions.split('. ');
             }
+            var ingredients = '';
+            $.each(data.Ingredients,function(){
+              var quantity = this.DisplayQuantity ? this.DisplayQuantity : '';
+              var unit = this.Unit ? this.Unit : '';
+              if ( quantity > 1 && unit !== '' ){
+                unit = this.Unit + 's';
+              }
+              ingredients = ingredients + '<p class="ingredient">' + quantity + ' ' + unit + ' ' + this.Name + '</p>';
+            });
             var steps = '';
+            var stepCount = 0;
             $.each(instructions,function(i){
-              stepArray.push(this);
-              steps = steps + '<p class="step" data-index="'+i+'">' + this + '</p>';
+              if ( isNaN(this) ){
+                stepArray.push(this);
+                steps = steps + '<p><a class="step" data-index="'+stepCount+'" href="#">' + this + '</a></p>';
+                stepCount++;
+              }
             });
             $('#results').html('' + 
-            '<div class="result">' + 
-              '<h2>' + data.Title + '</h2>' +
-              '<p>' +
-                '<img src="'+data.ImageURL+'" />' +
-              '</p>' +
-              steps +
+            '<div class="recipe">' + 
+              '<div class="header">' + 
+                '<h2>' + data.Title + '</h2>' +
+                '<span class="img-wrap"><img src="'+data.ImageURL+'" /></span>' +
               '</div>' +
+              '<div class="ingredients">' +
+                '<h3>Ingredients</h3>' +
+                ingredients +
+              '</div>' +
+              '<div class="steps">' +
+                '<h3>Steps</h3>' +
+                steps +
+              '</div>' +
+            '</div>' +
             '');
             speak(0);
+            $('#results .step').on('click',function(e){
+              e.preventDefault();
+              speak($(this).data('index'));
+              return false;
+            });
+            $('html').on('keydown',function(e) {
+              //TODO Why does this get triggered a billion times for each keypress?
+              // e.preventDefault();
+              // if (e.which === 38) {
+              //   if(index > 0) {
+              //     index = index--;
+              //   } else {
+              //     index = 0;
+              //   }
+              // }
+              // if (e.which === 40) {
+              //   if(index = stepArray.length) {
+              //     index = 'end';
+              //   } else {
+              //     index = index++;
+              //   }
+              // }
+              // console.log(index)
+              // speak(index);
+              // return false;
+            });
           },
           error: function(error){ },
           complete: function(){
@@ -95,11 +136,21 @@ function search(terms){
     }
 	});	
 }
- 
+
+var index = 0;
+var stepArray = new Array; 
+var recognition = new webkitSpeechRecognition();
+
+recognition.continuous = true;
+recognition.onresult = listenForCommand;
+
 var listenForCommand = function(event) {
+
   // TODO: Find best guess instead of just first one
   var transcript = event.results[0][0].transcript;
-  
+
+  console.log(stepArray,index,transcript);
+
   switch(transcript.toLowerCase()) {
     case "next":
     case "what's next":
@@ -130,6 +181,8 @@ var listenForCommand = function(event) {
       index = 'error';
       break;
   }
+
+  console.log(index)
  
   speak(index);
 }
@@ -146,7 +199,6 @@ var speak = function(index) {
   }
   recognition.stop();
   var msg = new SpeechSynthesisUtterance(pattern);
-  
   window.speechSynthesis.speak(msg);
   msg.onend = function(e) {
     recognition.start();

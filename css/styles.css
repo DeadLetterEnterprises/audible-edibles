@@ -14,15 +14,31 @@ p { margin-bottom: 15px; }
 }
 .search input:focus { outline: none; }
 
-.result { 
-	position: relative; padding: 30px 60px; 
-	border-top: 1px solid #eee; }
+.result { float: left; width: 50%; margin: 0; padding: 0; border-top: 1px solid #eee; }
+.result a { display: block; position: relative; height: 160px; padding: 30px; color: #333; }
+	.result a:hover { background: #eee; text-decoration: none; }
+	.result a:hover .glyphicon { display: block; }
+.result .img-wrap { float: left; margin-right: 30px; width: 200px; height: 100px; overflow: hidden; }
+	.result img { width: 100%; }
+.result .title { 
+	position: relative; top: 50%; transform: translateY(-50%);
+	display: block; margin-left: 130px; padding-right: 60px;
+	font-size: 24px; text-transform: capitalize; }
+	.result .title .glyphicon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #fff; font-size: 60px; }
 
-.result h2 { position: relative; font-size: 24px; padding-left: 60px; text-transform: capitalize; }
-.result p { padding-left: 60px; }
-.result img { max-width: 60%; }
-.result .step { line-height: 36px; }
-.result .active { background: gold; }
+.recipe h3 { margin-bottom: 15px; }
+
+.recipe .header { padding: 15px 60px; border-top: 1px solid #eee; }
+	.recipe .header .img-wrap { display: block; width: 100%; height: 200px; overflow: hidden; }
+	.recipe .header img { width: 100%; position: relative; transform: translateY(-50%); }
+
+.recipe .ingredients, .recipe .steps { float: left; margin: 0; padding: 15px 60px; }
+.recipe .ingredients { width: 40%; }
+.recipe .steps { width: 60%; }
+	.recipe .step { display: block; color: #333; text-decoration: none; line-height: 48px; }
+		.recipe .step:hover { background: #eee; }
+		.recipe .active.step, .recipe .active.step:hover { background: gold; }
+
 
 #footer { background: #eee; }
 #footer .padder { height: 300px; padding: 30px; }
